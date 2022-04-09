@@ -184,7 +184,6 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
 client.on("guildMemberUpdate",(oldMember, newMember) => {
   if(!oldMember.premiumSince && newMember.premiumSince){
     console.log('${newMember.user.username} was boosting this server!')
-    const avatarURL = newMember.author.displayAvatarURL();
     client.channel.cache.get("888638911088304189").send({
       embeds: {
         author: {
@@ -196,7 +195,7 @@ client.on("guildMemberUpdate",(oldMember, newMember) => {
         color: 16023551,
         timestamp: new Date(),
         thumbnail: {
-          url: avatarURL,
+          url: atari.png,
         },
         footer: {
             text: `現在のBoost数は${message.guild.premiumSubscriptionCount}Boostになりました！`
