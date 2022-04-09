@@ -1,2 +1,2 @@
 # ScratchCat
-##Scratchjpで使用しているBotです。
+## Scratchjpで使用しているBotです。
