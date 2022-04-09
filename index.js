@@ -195,7 +195,7 @@ client.on("guildMemberUpdate",(oldMember, newMember) => {
         color: 16023551,
         timestamp: new Date(),
         thumbnail: {
-          url: atari.png,
+          url: atari.png
         },
         footer: {
             text: `現在のBoost数は${message.guild.premiumSubscriptionCount}Boostになりました！`
