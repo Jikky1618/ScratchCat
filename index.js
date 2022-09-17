@@ -36,52 +36,6 @@ client.on("messageCreate", async (message) => {
   if(message.author.bot || message.system) return;
   let member = message.member;
   const period = Math.round((Date.now() - member.joinedAt) / ( 1000 * 60 * 60 * 24));
-  if(period < 30 && period > 7){
-    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
-    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
-    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
-    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
-    message.member.roles.add(config.oneWeekRole);//1週間参加ロール付与
-  }else if(period < 60 && period >= 30){
-    message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
-    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
-    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
-    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
-    message.member.roles.add(config.oneMonthRole);//1か月参加ロール付与
-  }else if(period < 90 && period >= 60){
-    message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
-    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
-    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
-    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
-    message.member.roles.add(config.twoMonthsRole);//2か月参加ロール付与
-  }else if(period < 180 && period >= 90){
-    message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
-    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
-    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
-    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
-    message.member.roles.add(config.threeMonthsRole);//3か月参加ロール付与
-  }else if(period < 270 && period >= 180){
-    message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
-    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
-    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
-    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
-    message.member.roles.add(config.sixMonthsRole);//6か月参加ロール付与
-  }else if(period < 365 && period >= 270){
-    message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
-    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
-    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
-    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
-    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
-    message.member.roles.add(config.nineMonthsRole);//9か月参加ロール付与
-  }else if(period < 365 * 2 && period >= 365){
-    message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
-    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
-    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
-    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
-    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
-    message.member.roles.remove(config.nineMonthsRole);//9か月参加ロール剥奪
-    message.member.roles.add(config.oneYearRole);//1年参加ロール付与
-  }
   //Omikuji
   if(message.content.match(/[Ss]cratch宝くじ！/)){
     if(message.channel.id === config.lotteryChannelId){
