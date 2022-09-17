@@ -1,10 +1,9 @@
-"use strict";
 const http = require('http');
 const config = require("./config");
 const { setTimeout } = require('timers/promises');
 const querystring = require('querystring');
 const { Client, Intents } = require('discord.js'); 
-const client = new Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_BANS", "GUILD_EMOJIS_AND_STICKERS", "GUILD_INTEGRATIONS", "GUILD_WEBHOOKS", "GUILD_INVITES", "GUILD_VOICE_STATES", "GUILD_PRESENCES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MESSAGE_TYPING", "DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "DIRECT_MESSAGE_TYPING"], restTimeOffset: 500}); 
+const client = new Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_BANS", "GUILD_EMOJIS_AND_STICKERS", "GUILD_INTEGRATIONS", "GUILD_WEBHOOKS", "GUILD_INVITES", "GUILD_VOICE_STATES", "GUILD_PRESENCES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MESSAGE_TYPING", "DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "DIRECT_MESSAGE_TYPING"], restTimeOffset: 50}); 
 const MY_GUILD = config.serverId;
 require("dotenv").config();
 
@@ -37,20 +36,29 @@ client.on("messageCreate", async (message) => {
   if(message.author.bot || message.system) return;
   let member = message.member;
   const period = Math.round((Date.now() - member.joinedAt) / ( 1000 * 60 * 60 * 24));
-  
   if(period < 30 && period > 7){
+    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
+    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
+    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
+    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
     message.member.roles.add(config.oneWeekRole);//1週間参加ロール付与
   }else if(period < 60 && period >= 30){
     message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
+    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
+    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
+    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
     message.member.roles.add(config.oneMonthRole);//1か月参加ロール付与
   }else if(period < 90 && period >= 60){
     message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
     message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
+    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
+    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
     message.member.roles.add(config.twoMonthsRole);//2か月参加ロール付与
   }else if(period < 180 && period >= 90){
     message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
     message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
     message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
+    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
     message.member.roles.add(config.threeMonthsRole);//3か月参加ロール付与
   }else if(period < 270 && period >= 180){
     message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
@@ -63,11 +71,16 @@ client.on("messageCreate", async (message) => {
     message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
     message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
     message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
-    message.member.roles.remove(config.sixMonthsRole);
-    message.member.roles.add(config.nineMonthsRole);
-  }
-  if(message.content.match(/discord.gg/)){
-      message.channel.send("<:yougotthis:937292033784172574>");
+    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
+    message.member.roles.add(config.nineMonthsRole);//9か月参加ロール付与
+  }else if(period < 365 * 2 && period >= 365){
+    message.member.roles.remove(config.oneWeekRole);//1週間参加ロール剥奪
+    message.member.roles.remove(config.oneMonthRole);//1か月参加ロール剥奪
+    message.member.roles.remove(config.twoMonthsRole);//2か月参加ロール剥奪
+    message.member.roles.remove(config.threeMonthsRole);//3か月参加ロール剥奪
+    message.member.roles.remove(config.sixMonthsRole);//6か月参加ロール剥奪
+    message.member.roles.remove(config.nineMonthsRole);//9か月参加ロール剥奪
+    message.member.roles.add(config.oneYearRole);//1年参加ロール付与
   }
   //Omikuji
   if(message.content.match(/[Ss]cratch宝くじ！/)){
@@ -95,12 +108,8 @@ client.on("messageCreate", async (message) => {
       }
     }
   }
-  //Auto react(channel) 
-  if(message.channel.id === "892061606920470540" || message.channel.id === "932104884164100177" || message.channel.id === "939555978330923088"){
-    message.react('👍');//#updatesと#なんでも呟きと#Scratch作品紹介
-  }
   //Auto react(message)
-  if(message.content.match(/^神$/)){
+　if(message.content.match(/^神$/)){
     let emoji = client.emojis.cache.find(emoji => emoji.name === "JP1_kami");
     message.react(`${emoji}`);
   }
@@ -125,7 +134,7 @@ client.on("messageCreate", async (message) => {
   }
   //run command
   if (command === "run") {
-    if (!["845998854712721408"].includes(message.author.id)) return;
+  　if (!["845998854712721408"].includes(message.author.id)) return;
     const code = args.join(" ");
     const result = new Promise((resolve) => resolve(eval(code)));
     return result
@@ -148,8 +157,8 @@ client.on("messageCreate", async (message) => {
   }
   
   if (command === "say") {
-    if (!["845998854712721408"].includes(message.author.id)) return;
-    message.channel.send("> **Scratch認証**\n<:SCDOT:917056096202522634>Scratchアカウントを持っているかたはこちらから認証をお願いします。\n<:SCDOT:917056096202522634>If you have a Scratch account, please click here to authenticate.\n\n:warning:New Scratcherは認証できません。こちらのスタジオで問い合わせをお願いします：https://scratch.mit.edu/studios/31009600/comments \n\nScratch認証をすると専用チャンネルを閲覧＆メッセージを送信することができます。\n<#900714827889123340>...Scratchに関する話題で話し合おう！\n<#939555978330923088>...あなたや他の人のすごい作品を紹介しよう！\n<#917655880433025075>...Scratchに関する質問や疑問点はここでみんなと共有しましょう！")
+    if (!["744786285130154084"].includes(message.author.id)) return;
+    message.channel.send("");
   }
 });
 
@@ -158,44 +167,25 @@ client.on("guildMemberAdd", async member => {
   const guild = client.guilds.cache.get(MY_GUILD);
   if (member.guild.id !== config.serverId) return;
 	console.log(`${member.guild.name} に ${member.displayName} が参加しました。現在は ${guild.memberCount} 人です。`);
-  member.guild.channels.cache.get("926716789197508628").send(`**Welcome to Scratch(JP)!**\n${member}さんScratch(JP)へようこそ！！`);
-  const welcomePing = await client.channels.cache.get("926716789197508628").send(`<@&` + `916543770022006844` + `>`);
-  await setTimeout(10 * 1000);
-  await welcomePing.delete()
+  member.guild.channels.cache.get("959845771145019492").send(`**Welcome to Scratch(JP)!**\n${member}さんScratch(JP)へようこそ！！\n<#1016269888937017394>で是非、自己紹介をお願いします！`);
  })
-
-//voice channel event
-client.on("voiceStateUpdate", async (oldState, newState) => {
-  if(oldState.channel === null && newState.channel !== null){
-    newState.member.roles.add(config.vcRole);
-    const connectLog = await client.channels.cache.get(config.noMicChannelId).send(`${newState.member.user.username}さんが${newState.channel}に接続しました！\nVCでの会話やコマンドはこのチャンネル<#${config.noMicChannelId}>で行いましょう！`);
-    await setTimeout(10 * 1000);
-    await connectLog.delete()
-  }
-  if(oldState.channel !== null && newState.channel === null){
-    oldState.member.roles.remove(config.vcRole);
-    const connectLog = await client.channels.cache.get(config.noMicChannelId).send(`${oldState.member.user.username}さんが${oldState.channel}から切断しました。`);
-    await setTimeout(10 * 1000);
-    await connectLog.delete()
-  }
-});
 
 //Boost event
 client.on("guildMemberUpdate",(oldMember, newMember) => {
   if(!oldMember.premiumSince && newMember.premiumSince){
     console.log('${newMember.user.username} was boosting this server!')
-    client.channel.cache.get("888638911088304189").send({
+    client.channels.cache.get("888638911088304189").send({
       embeds: {
         author: {
             name: "Thank you for boost!",
             icon_url: "https://cdn.discordapp.com/emojis/917029194238689340.gif",
         },
         title: `**${newMember.user.username}さんがBoostしてくれました！！**`,
-        description: `${newMember.user}さん、Boostありがとうございます！\n以下のことができるようになりました！\n>>> <:SCDOT:917056096202522634> <#913817902065524736>の閲覧\n <:SCDOT:917056096202522634> サーバーインサイト、監査ログの閲覧\n <:SCDOT:917056096202522634> 絵文字・スタンプの追加`,
+        description: `${newMember.user}さん、Boostありがとうございます！`,
         color: 16023551,
         timestamp: new Date(),
         thumbnail: {
-          url: atari.png
+          url: "https://cdn.discordapp.com/attachments/907642837846343681/949712950195789874/omikuji_atari.png",
         },
         footer: {
             text: `現在のBoost数は${message.guild.premiumSubscriptionCount}Boostになりました！`
@@ -212,13 +202,13 @@ process.on("uncaughtException", (err) => {
   console.log(err);
   client.channels.cache.get(config.loggingChannelId).send({
     embeds: [{
-	   	title: `<a:off_nitro:918372245078962187>error発生しました。`,
-      description:`\n\`\`\`${err}\`\`\`\n`,
-	   	color: 16711680,
-	   	timestamp: new Date(),
-      author: {
-        name: `${client.user.tag}`,
-        icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png"
+	  title: `<a:off_nitro:918372245078962187>error発生しました。`,
+    description:`\n\`\`\`${err}\`\`\`\n`,
+	  color: 16711680,
+	  timestamp: new Date(),
+    author: {
+      name: `${client.user.tag}`,
+      icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png"
       }
 	  }]
   });
