@@ -1,11 +1,16 @@
-const client = new Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_BANS", "GUILD_EMOJIS_AND_STICKERS", "GUILD_INTEGRATIONS", "GUILD_WEBHOOKS", "GUILD_INVITES", "GUILD_VOICE_STATES", "GUILD_PRESENCES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MESSAGE_TYPING", "DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "DIRECT_MESSAGE_TYPING"], restTimeOffset: 50}); 
-const { Client, Intents } = require('discord.js'); 
+const http = require('http');
 const config = require("./config");
 const { setTimeout } = require('timers/promises');
 const querystring = require('querystring');
+const { Client, Intents } = require('discord.js'); 
+const client = new Client({ intents: ["GUILDS", "GUILD_MEMBERS", "GUILD_BANS", "GUILD_EMOJIS_AND_STICKERS", "GUILD_INTEGRATIONS", "GUILD_WEBHOOKS", "GUILD_INVITES", "GUILD_VOICE_STATES", "GUILD_PRESENCES", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_MESSAGE_TYPING", "DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "DIRECT_MESSAGE_TYPING"], restTimeOffset: 50}); 
 const MY_GUILD = config.serverId;
 require("dotenv").config();
 
+http.createServer(function (req, res){
+  res.write("GG");
+  res.end();
+}).listen(8080);
 
 client.on("ready", message => {
   const guild = client.guilds.cache.get(MY_GUILD);
