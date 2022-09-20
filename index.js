@@ -36,6 +36,8 @@ client.on("messageCreate", async (message) => {
   if(message.author.bot || message.system) return;
   let member = message.member;
   const period = Math.round((Date.now() - member.joinedAt) / ( 1000 * 60 * 60 * 24));
+  //1year Event
+  message.member.roles.add(config.eventRole);
   //Omikuji
   if(message.content.match(/[Ss]cratch宝くじ！/)){
     if(message.channel.id === config.lotteryChannelId){
