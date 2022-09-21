@@ -20,8 +20,7 @@ const client = new Client({
         "DIRECT_MESSAGES",
         "DIRECT_MESSAGE_REACTIONS",
         "DIRECT_MESSAGE_TYPING",
-    ],
-    restTimeOffset: 50,
+    ]
 });
 const MY_GUILD = config.serverId;
 require("dotenv").config();
