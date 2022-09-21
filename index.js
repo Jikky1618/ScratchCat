@@ -1,4 +1,3 @@
-const http = require("http");
 const config = require("./config");
 const { setTimeout } = require("timers/promises");
 const querystring = require("querystring");
@@ -24,11 +23,6 @@ const client = new Client({
 });
 const MY_GUILD = config.serverId;
 require("dotenv").config();
-
-http.createServer(function (req, res) {
-    res.write("GG");
-    res.end();
-}).listen(8080);
 
 client.on("ready", (message) => {
     const guild = client.guilds.cache.get(MY_GUILD);
