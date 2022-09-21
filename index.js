@@ -1,7 +1,8 @@
+const { Client, Intents } = require("discord.js");
 const config = require("./config");
+const MY_GUILD = config.serverId;
 const { setTimeout } = require("timers/promises");
 const querystring = require("querystring");
-const { Client, Intents } = require("discord.js");
 const client = new Client({
     intents: [
         "GUILDS",
@@ -14,7 +15,7 @@ const client = new Client({
         "GUILD_MESSAGE_TYPING",
     ],
 });
-const MY_GUILD = config.serverId;
+
 require("dotenv").config();
 
 client.on("ready", (message) => {
