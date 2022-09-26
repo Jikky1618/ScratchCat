@@ -6,5 +6,5 @@ module.exports = {
     loggingChannelId: "944845301624217671", //ScratchCat-logチャンネルid
     vcRole: "941002532732412015",
     verifiedRole: "892320750940332033",
-    eventRole: "845998854712721408", // day6
+    eventRole: "1020552209714393168", // day6
 };
