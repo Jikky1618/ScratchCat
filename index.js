@@ -149,18 +149,18 @@ client.on("messageCreate", async (message) => {
 });
 
 //Welcome message
-client.on("guildMemberAdd", async (member) => {
-    const guild = client.guilds.cache.get(MY_GUILD);
-    if (member.guild.id !== config.serverId) return;
-    console.log(
-        `${member.guild.name} に ${member.displayName} が参加しました。現在は ${guild.memberCount} 人です。`
-    );
-    member.guild.channels.cache
-        .get("959845771145019492")
-        .send(
-            `**Welcome to Scratch(JP)!**\n${member}さんScratch(JP)へようこそ！！\n<#1016269888937017394>で是非、自己紹介をお願いします！`
-        );
-});
+// client.on("guildMemberAdd", async (member) => {
+//     const guild = client.guilds.cache.get(MY_GUILD);
+//     if (member.guild.id !== config.serverId) return;
+//     console.log(
+//         `${member.guild.name} に ${member.displayName} が参加しました。現在は ${guild.memberCount} 人です。`
+//     );
+//     member.guild.channels.cache
+//         .get("959845771145019492")
+//         .send(
+//             `**Welcome to Scratch(JP)!**\n${member}さんScratch(JP)へようこそ！！\n<#1016269888937017394>で是非、自己紹介をお願いします！`
+//         );
+// });
 
 //Boost event
 client.on("guildMemberUpdate", (oldMember, newMember) => {
