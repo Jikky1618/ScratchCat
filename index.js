@@ -141,7 +141,8 @@ client.on("messageCreate", async (message) => {
 
     if (command === "say") {
         if (!["744786285130154084"].includes(message.author.id)) return;
-        message.channel.send(args.join(" "), { allowedMentions: { parse: [] }});
+        const result = args.join(" ");
+        message.channel.send(result);
     }
 });
 
