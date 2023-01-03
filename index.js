@@ -45,10 +45,8 @@ client.on("ready", (message) => {
 
 client.on("messageCreate", async (message) => {
     if (message.author.bot || message.system) return;
+    if (!message.content.startsWith(config.prefix)) return;
     let member = message.member;
-    const period = Math.round(
-        (Date.now() - member.joinedAt) / (1000 * 60 * 60 * 24)
-    );
     //Omikuji
     if (message.content.match(/[Ss]cratch宝くじ！/)) {
         if (message.channel.id === config.lotteryChannelId) {
@@ -104,7 +102,6 @@ client.on("messageCreate", async (message) => {
         message.react(`👍`);
     }
 
-    if (!message.content.startsWith(config.prefix)) return;
     const args = message.content
         .slice(config.prefix.length)
         .trim()
@@ -144,10 +141,6 @@ client.on("messageCreate", async (message) => {
 
     if (command === "say") {
         if (!["744786285130154084"].includes(message.author.id)) return;
-        const args = message.content
-            .slice(prefix.length)
-            .trim()
-            .split(/ +/g);
         message.channel.send(args.join(" "), { allowedMentions: { parse: [] }});
     }
 });
