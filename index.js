@@ -26,8 +26,7 @@ client.on("ready", (message) => {
             {
                 author: {
                     name: `${client.user.tag}`,
-                    icon_url:
-                        "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
+                    icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
                 },
                 title: `<a:upvote:918371919974248458>${client.user.username}は正常に再起動しました！`,
                 color: 65280,
@@ -36,10 +35,7 @@ client.on("ready", (message) => {
         ],
     });
     setInterval(() => {
-        client.user.setActivity(
-            `${client.ws.ping}ms | ${guild.memberCount} members`,
-            { type: "WATCHING" }
-        );
+        client.user.setActivity(`${client.ws.ping}ms | ${guild.memberCount} members`, { type: "WATCHING" });
     }, 6 * 1000);
 });
 
@@ -87,25 +83,18 @@ client.on("messageCreate", async (message) => {
     }
     //Auto react(message)
     if (message.content.match(/^神$/)) {
-        let emoji = client.emojis.cache.find(
-            (emoji) => emoji.name === "JP1_kami"
-        );
+        let emoji = client.emojis.cache.find((emoji) => emoji.name === "JP1_kami");
         message.react(`${emoji}`);
     }
     if (message.content.match(/草$|kusa$/i)) {
-        let emoji = client.emojis.cache.find(
-            (emoji) => emoji.name === "JP1_kusa"
-        );
+        let emoji = client.emojis.cache.find((emoji) => emoji.name === "JP1_kusa");
         message.react(`${emoji}`);
     }
     if (message.content.match(/^Nice$/i)) {
         message.react(`👍`);
     }
 
-    const args = message.content
-        .slice(config.prefix.length)
-        .trim()
-        .split(/ +/g);
+    const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
     const command = args.shift().toLowerCase();
     //help command
     if (command === "help") {
@@ -161,28 +150,33 @@ client.on("messageCreate", async (message) => {
 // });
 
 //Boost event
+
 client.on("guildMemberUpdate", (oldMember, newMember) => {
     if (!oldMember.premiumSince && newMember.premiumSince) {
-        console.log("${newMember.user.username} was boosting this server!");
-        client.channels.cache.get("888638911088304189").send({
-            embeds: {
-                author: {
-                    name: "Thank you for boost!",
-                    icon_url:
-                        "https://cdn.discordapp.com/emojis/917029194238689340.gif",
-                },
-                title: `**${newMember.user.username}さんがBoostしてくれました！！**`,
-                description: `${newMember.user}さん、Boostありがとうございます！`,
-                color: 16023551,
-                timestamp: new Date(),
-                thumbnail: {
-                    url: "https://cdn.discordapp.com/attachments/907642837846343681/949712950195789874/omikuji_atari.png",
-                },
-                footer: {
-                    text: `現在のBoost数は${message.guild.premiumSubscriptionCount}Boostになりました！`,
-                },
-            },
-        });
+        console.log(`${newMember.user.username} was boosting this server!`);
+        let channel = client.channels.cache.get("888638911088304189");
+        if (channel && channel.isTextBased()) {
+            channel.send({
+                embeds: [
+                    {
+                        author: {
+                            name: "Thank you for boost!",
+                            icon_url: "https://cdn.discordapp.com/emojis/917029194238689340.gif",
+                        },
+                        title: `**${newMember.user.username}さんがBoostしてくれました！！**`,
+                        description: `${newMember.user}さん、Boostありがとうございます！`,
+                        color: 16023551,
+                        timestamp: new Date().toString(),
+                        thumbnail: {
+                            url: "https://cdn.discordapp.com/attachments/907642837846343681/949712950195789874/omikuji_atari.png",
+                        },
+                        footer: {
+                            text: `現在のBoost数は${newMember.guild.premiumSubscriptionCount}Boostになりました！`,
+                        },
+                    },
+                ],
+            });
+        }
     }
 });
 
@@ -199,8 +193,7 @@ process.on("uncaughtException", (err) => {
                 timestamp: new Date(),
                 author: {
                     name: `${client.user.tag}`,
-                    icon_url:
-                        "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
+                    icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
                 },
             },
         ],
