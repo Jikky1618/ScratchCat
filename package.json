@@ -16,6 +16,7 @@
     "node.js": "^0.0.1-security"
   },
   "devDependencies": {
-    "node": "^16.13.2"
+    "node": "^16.13.2",
+    "typescript": "^5.3.3"
   }
 }
