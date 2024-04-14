@@ -1,14 +1,22 @@
-import { Client, Intents, version } from "discord.js";
+
+import { speakers } from "./apis/voicevox";
+import {
+    Client,
+    IntentsBitField,
+    ActivityType,
+    SlashCommandBuilder,
+    ChannelType,
+    version,
+} from "discord.js";
+import { listener, messageListener } from "./commands/index";
+import { joinVoiceChannel, getVoiceConnection } from "@discordjs/voice";
 const client = new Client({
     intents: [
-        "GUILDS",
-        "GUILD_MEMBERS",
-        "GUILD_EMOJIS_AND_STICKERS",
-        "GUILD_INTEGRATIONS",
-        "GUILD_PRESENCES",
-        "GUILD_MESSAGES",
-        "GUILD_MESSAGE_REACTIONS",
-        "GUILD_MESSAGE_TYPING",
+        IntentsBitField.Flags.Guilds,
+        IntentsBitField.Flags.GuildMembers,
+        IntentsBitField.Flags.GuildMessages,
+        IntentsBitField.Flags.GuildVoiceStates,
+        IntentsBitField.Flags.MessageContent,
     ],
 });
 import { config } from "dotenv";
@@ -22,12 +30,63 @@ if (!MY_GUILD || !LOGGING_CHANNEL) {
     console.error("config.envファイルが正しく設定されていません");
     process.exit(1);
 }
+function updatePresence() {
+    client.user?.setPresence({
+        activities: [
+            {
+                name: client.guilds.cache.size + "サーバーに導入中",
+                state: "/joinコマンドで読み上げを起動できるよ",
+            },
+        ],
+    });
+}
 
 client.on("ready", () => {
     let kangping = client.users.cache.get("1028165215579279410");
     if (kangping) {
         kangping.send("discord.jsのバージョンは" + version);
     }
+    client.user?.setPresence({
+        activities: [
+            {
+                name: "初期化中",
+                type: ActivityType.Playing,
+                state: "クレジットは/creditコマンドで確認してください",
+            },
+        ],
+    });
+    let setCommand = new SlashCommandBuilder()
+        .setName("set")
+        .setDescription("読み上げの声を指定します")
+        .addStringOption((builder) => {
+            builder.setName("voice");
+            builder.setDescription("声");
+            builder.setRequired(true);
+            let choices: { name: string; value: string }[] = [];
+            choices.push({
+                name: "Scratch読み上げ",
+                value: "scratch_0",
+            });
+            builder.setChoices(...choices);
+            return builder;
+        });
+    client.application?.commands.set([
+        new SlashCommandBuilder()
+            .setName("info")
+            .setDescription("Botの情報を表示できます。"),
+        new SlashCommandBuilder()
+            .setName("credit")
+            .setDescription("音声読み上げのクレジットを表示します"),
+        new SlashCommandBuilder()
+            .setName("join")
+            .setDescription("読み上げを接続します"),
+        new SlashCommandBuilder()
+            .setName("exit")
+            .setDescription("読み上げを切断します"),
+        setCommand,
+    ]);
+    updatePresence();
+    setInterval(updatePresence, 1000 * 10);
     const guild = client.guilds.cache.get(MY_GUILD);
     console.log(`Logged in as ${client.user?.tag}!`);
     let channel = client.channels.cache.get(LOGGING_CHANNEL);
@@ -37,21 +96,30 @@ client.on("ready", () => {
                 {
                     author: {
                         name: `${client.user?.tag}`,
-                        icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
+                        icon_url:
+                            "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
                     },
                     title: `<a:upvote:918371919974248458>${client.user?.username}は正常に再起動しました！`,
                     color: 65280,
-                    timestamp: new Date(),
+                    timestamp: new Date().toString(),
                 },
             ],
         });
     }
     setInterval(() => {
-        client.user?.setActivity(`${client.ws.ping}ms | ${guild?.memberCount} members`, { type: "WATCHING" });
+        client.user?.setActivity(
+            `${client.ws.ping}ms | ${guild?.memberCount} members`,
+            { type: ActivityType.Watching }
+        );
     }, 6 * 1000);
 });
 
+client.on("interactionCreate", (interaction) => {
+    listener(interaction);
+});
+
 client.on("messageCreate", async (message) => {
+    messageListener(message);
     if (message.author.bot || message.system) return;
     if (!message.content.startsWith(String(process.env.prefix))) return;
     let member = message.member;
@@ -95,18 +163,25 @@ client.on("messageCreate", async (message) => {
     }
     //Auto react(message)
     if (message.content.match(/^神$/)) {
-        let emoji = client.emojis.cache.find((emoji) => emoji.name === "JP1_kami");
+        let emoji = client.emojis.cache.find(
+            (emoji) => emoji.name === "JP1_kami"
+        );
         message.react(`${emoji}`);
     }
     if (message.content.match(/草$|kusa$/i)) {
-        let emoji = client.emojis.cache.find((emoji) => emoji.name === "JP1_kusa");
+        let emoji = client.emojis.cache.find(
+            (emoji) => emoji.name === "JP1_kusa"
+        );
         message.react(`${emoji}`);
     }
     if (message.content.match(/^Nice$/i)) {
         message.react(`👍`);
     }
 
-    const args = message.content.slice(String(process.env.prefix).length).trim().split(/ +/g);
+    const args = message.content
+        .slice(String(process.env.prefix).length)
+        .trim()
+        .split(/ +/g);
     const command = String(args.shift()).toLowerCase();
     //help command
     if (command === "help") {
@@ -128,7 +203,10 @@ client.on("messageCreate", async (message) => {
                 }
                 let output_str = String(output);
                 if (output_str.includes(String(client.token))) {
-                    output = output_str.replace(String(client.token), "[TOKEN]");
+                    output = output_str.replace(
+                        String(client.token),
+                        "[TOKEN]"
+                    );
                 }
                 message.reply(`\`\`\`js\n${output_str}\n\`\`\``);
             })
@@ -174,7 +252,8 @@ client.on("guildMemberUpdate", (oldMember, newMember) => {
                     {
                         author: {
                             name: "Thank you for boost!",
-                            icon_url: "https://cdn.discordapp.com/emojis/917029194238689340.gif",
+                            icon_url:
+                                "https://cdn.discordapp.com/emojis/917029194238689340.gif",
                         },
                         title: `**${newMember.user.username}さんがBoostしてくれました！！**`,
                         description: `${newMember.user}さん、Boostありがとうございます！`,
@@ -205,13 +284,27 @@ process.on("uncaughtException", (err) => {
                     title: `<a:off_nitro:918372245078962187>error発生しました。`,
                     description: `\n\`\`\`${err}\`\`\`\n`,
                     color: 16711680,
-                    timestamp: new Date(),
+                    timestamp: new Date().toString(),
                     author: {
                         name: `${client.user?.tag}`,
-                        icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
+                        icon_url:
+                            "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
                     },
                 },
             ],
         });
     }
+});
+process.on("SIGINT", () => {
+    let count = 0;
+    client.guilds.cache.forEach(async (guild) => {
+        const connection = getVoiceConnection(guild.id);
+        if (connection) {
+            connection.destroy();
+        }
+        count += 1;
+        if (count == client.guilds.cache.size) {
+            setTimeout(process.exit, 1000);
+        }
+    });
 });

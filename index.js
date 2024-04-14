@@ -10,16 +10,15 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const discord_js_1 = require("discord.js");
+const index_1 = require("./commands/index");
+const voice_1 = require("@discordjs/voice");
 const client = new discord_js_1.Client({
     intents: [
-        "GUILDS",
-        "GUILD_MEMBERS",
-        "GUILD_EMOJIS_AND_STICKERS",
-        "GUILD_INTEGRATIONS",
-        "GUILD_PRESENCES",
-        "GUILD_MESSAGES",
-        "GUILD_MESSAGE_REACTIONS",
-        "GUILD_MESSAGE_TYPING",
+        discord_js_1.IntentsBitField.Flags.Guilds,
+        discord_js_1.IntentsBitField.Flags.GuildMembers,
+        discord_js_1.IntentsBitField.Flags.GuildMessages,
+        discord_js_1.IntentsBitField.Flags.GuildVoiceStates,
+        discord_js_1.IntentsBitField.Flags.MessageContent,
     ],
 });
 const dotenv_1 = require("dotenv");
@@ -32,36 +31,92 @@ if (!MY_GUILD || !LOGGING_CHANNEL) {
     console.error("config.envファイルが正しく設定されていません");
     process.exit(1);
 }
+function updatePresence() {
+    var _a;
+    (_a = client.user) === null || _a === void 0 ? void 0 : _a.setPresence({
+        activities: [
+            {
+                name: client.guilds.cache.size + "サーバーに導入中",
+                state: "/joinコマンドで読み上げを起動できるよ",
+            },
+        ],
+    });
+}
 client.on("ready", () => {
-    var _a, _b, _c;
+    var _a, _b, _c, _d, _e;
     let kangping = client.users.cache.get("1028165215579279410");
     if (kangping) {
         kangping.send("discord.jsのバージョンは" + discord_js_1.version);
     }
+    (_a = client.user) === null || _a === void 0 ? void 0 : _a.setPresence({
+        activities: [
+            {
+                name: "初期化中",
+                type: discord_js_1.ActivityType.Playing,
+                state: "クレジットは/creditコマンドで確認してください",
+            },
+        ],
+    });
+    let setCommand = new discord_js_1.SlashCommandBuilder()
+        .setName("set")
+        .setDescription("読み上げの声を指定します")
+        .addStringOption((builder) => {
+        builder.setName("voice");
+        builder.setDescription("声");
+        builder.setRequired(true);
+        let choices = [];
+        choices.push({
+            name: "Scratch読み上げ",
+            value: "scratch_0",
+        });
+        builder.setChoices(...choices);
+        return builder;
+    });
+    (_b = client.application) === null || _b === void 0 ? void 0 : _b.commands.set([
+        new discord_js_1.SlashCommandBuilder()
+            .setName("info")
+            .setDescription("Botの情報を表示できます。"),
+        new discord_js_1.SlashCommandBuilder()
+            .setName("credit")
+            .setDescription("音声読み上げのクレジットを表示します"),
+        new discord_js_1.SlashCommandBuilder()
+            .setName("join")
+            .setDescription("読み上げを接続します"),
+        new discord_js_1.SlashCommandBuilder()
+            .setName("exit")
+            .setDescription("読み上げを切断します"),
+        setCommand,
+    ]);
+    updatePresence();
+    setInterval(updatePresence, 1000 * 10);
     const guild = client.guilds.cache.get(MY_GUILD);
-    console.log(`Logged in as ${(_a = client.user) === null || _a === void 0 ? void 0 : _a.tag}!`);
+    console.log(`Logged in as ${(_c = client.user) === null || _c === void 0 ? void 0 : _c.tag}!`);
     let channel = client.channels.cache.get(LOGGING_CHANNEL);
     if (channel && "send" in channel) {
         channel.send({
             embeds: [
                 {
                     author: {
-                        name: `${(_b = client.user) === null || _b === void 0 ? void 0 : _b.tag}`,
+                        name: `${(_d = client.user) === null || _d === void 0 ? void 0 : _d.tag}`,
                         icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
                     },
-                    title: `<a:upvote:918371919974248458>${(_c = client.user) === null || _c === void 0 ? void 0 : _c.username}は正常に再起動しました！`,
+                    title: `<a:upvote:918371919974248458>${(_e = client.user) === null || _e === void 0 ? void 0 : _e.username}は正常に再起動しました！`,
                     color: 65280,
-                    timestamp: new Date(),
+                    timestamp: new Date().toString(),
                 },
             ],
         });
     }
     setInterval(() => {
         var _a;
-        (_a = client.user) === null || _a === void 0 ? void 0 : _a.setActivity(`${client.ws.ping}ms | ${guild === null || guild === void 0 ? void 0 : guild.memberCount} members`, { type: "WATCHING" });
+        (_a = client.user) === null || _a === void 0 ? void 0 : _a.setActivity(`${client.ws.ping}ms | ${guild === null || guild === void 0 ? void 0 : guild.memberCount} members`, { type: discord_js_1.ActivityType.Watching });
     }, 6 * 1000);
 });
+client.on("interactionCreate", (interaction) => {
+    (0, index_1.listener)(interaction);
+});
 client.on("messageCreate", (message) => __awaiter(void 0, void 0, void 0, function* () {
+    (0, index_1.messageListener)(message);
     if (message.author.bot || message.system)
         return;
     if (!message.content.startsWith(String(process.env.prefix)))
@@ -118,7 +173,10 @@ client.on("messageCreate", (message) => __awaiter(void 0, void 0, void 0, functi
     if (message.content.match(/^Nice$/i)) {
         message.react(`👍`);
     }
-    const args = message.content.slice(String(process.env.prefix).length).trim().split(/ +/g);
+    const args = message.content
+        .slice(String(process.env.prefix).length)
+        .trim()
+        .split(/ +/g);
     const command = String(args.shift()).toLowerCase();
     //help command
     if (command === "help") {
@@ -214,7 +272,7 @@ process.on("uncaughtException", (err) => {
                     title: `<a:off_nitro:918372245078962187>error発生しました。`,
                     description: `\n\`\`\`${err}\`\`\`\n`,
                     color: 16711680,
-                    timestamp: new Date(),
+                    timestamp: new Date().toString(),
                     author: {
                         name: `${(_a = client.user) === null || _a === void 0 ? void 0 : _a.tag}`,
                         icon_url: "https://cdn.discordapp.com/attachments/907642837846343681/941851874687062016/icon2.png",
@@ -223,4 +281,17 @@ process.on("uncaughtException", (err) => {
             ],
         });
     }
+});
+process.on("SIGINT", () => {
+    let count = 0;
+    client.guilds.cache.forEach((guild) => __awaiter(void 0, void 0, void 0, function* () {
+        const connection = (0, voice_1.getVoiceConnection)(guild.id);
+        if (connection) {
+            connection.destroy();
+        }
+        count += 1;
+        if (count == client.guilds.cache.size) {
+            setTimeout(process.exit, 1000);
+        }
+    }));
 });

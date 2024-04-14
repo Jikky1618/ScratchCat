@@ -1,22 +1,23 @@
 {
-  "name": "scratchjpbot",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "discord.js": "^13.6.0",
-    "dotenv": "^16.0.0",
-    "fs": "^0.0.1-security",
-    "node.js": "^0.0.1-security"
-  },
-  "devDependencies": {
-    "node": "^16.13.2",
-    "typescript": "^5.3.3"
-  }
+    "name": "scratchjpbot",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@discordjs/voice": "^0.16.0",
+        "discord.js": "^14.13.0",
+        "dotenv": "^16.3.1",
+        "os-utils": "^0.0.14",
+        "tweetnacl": "^1.0.3"
+    },
+    "devDependencies": {
+        "@types/node": "^20.8.7",
+        "@types/os-utils": "^0.0.3"
+    }
 }
