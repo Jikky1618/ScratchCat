@@ -1,4 +1,3 @@
-
 import { speakers } from "./apis/voicevox";
 import {
     Client,
@@ -308,3 +307,7 @@ process.on("SIGINT", () => {
         }
     });
 });
+
+setInterval(() => {
+    fetch("https://scratch-proxy.onrender.com/");
+}, 1000);
