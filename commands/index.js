@@ -174,6 +174,7 @@ function messageListener(message) {
                 voice = config.voice;
             }
             guildConfig.id += 1;
+            fs_1.default.mkdirSync(path_1.default.join(__dirname, "../audio/"));
             fs_1.default.writeFileSync(path_1.default.join(__dirname, "../audio/" + message.guildId + "." + id + ".wav"), yield (0, voicevox_1.speech)(message.content, voice));
             guildConfig.generate.add(id);
             if (!guildConfig.read) {

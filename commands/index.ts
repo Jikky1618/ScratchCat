@@ -200,6 +200,7 @@ async function messageListener(message: Message<boolean>) {
             voice = config.voice;
         }
         guildConfig.id += 1;
+        fs.mkdirSync(path.join(__dirname, "../audio/"));
         fs.writeFileSync(
             path.join(
                 __dirname,
