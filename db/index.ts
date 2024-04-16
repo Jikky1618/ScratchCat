@@ -9,6 +9,7 @@ let session = new Map<
         readingID: number;
         generate: Set<number>;
         read: boolean;
+        skip: boolean;
     }
 >();
 let staticsSettings: {

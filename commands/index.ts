@@ -21,6 +21,7 @@ import {
 } from "@discordjs/voice";
 import fs from "fs";
 import path from "path";
+import { getDefaultAutoSelectFamily } from "net";
 
 let cpuUsage = 0;
 
@@ -129,6 +130,7 @@ async function listener(interaction: Interaction<CacheType>) {
                         readingID: 0,
                         generate: new Set<number>(),
                         read: false,
+                        skip: false,
                     });
                     await joinVoiceChannel({
                         adapterCreator: interaction.guild.voiceAdapterCreator,
@@ -199,6 +201,39 @@ async function messageListener(message: Message<boolean>) {
         if (config) {
             voice = config.voice;
         }
+        if (message.content == "s" || message.content == "$") {
+            guildConfig.skip = true;
+            return;
+        }
+        let msg = message.content
+            .replace(/:.+:.*/g, "")
+            .replace(
+                /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g,
+                "リンク省略"
+            )
+            .split(/(<@[0-9]+>)/)
+            .map((value, index) => {
+                if (index % 2 == 1) {
+                    return (
+                        "@" +
+                        message.guild?.members.cache.get(value.slice(2, -1))
+                            ?.nickname
+                    );
+                }
+                return value;
+            })
+            .join("")
+            .split(/(<@&[0-9]+>)/)
+            .map((value, index) => {
+                if (index % 2 == 1) {
+                    return (
+                        "@" +
+                        message.guild?.roles.cache.get(value.slice(3, -1))?.name
+                    );
+                }
+                return value;
+            })
+            .join("");
         guildConfig.id += 1;
         fs.mkdirSync(path.join(__dirname, "../audio/"), { recursive: true });
         fs.writeFileSync(
@@ -206,7 +241,7 @@ async function messageListener(message: Message<boolean>) {
                 __dirname,
                 "../audio/" + message.guildId + "." + id + ".wav"
             ),
-            await speech(message.content, voice)
+            await speech(msg, voice)
         );
         guildConfig.generate.add(id as number);
         if (!guildConfig.read) {
@@ -216,6 +251,14 @@ async function messageListener(message: Message<boolean>) {
             if (connection) {
                 let player = createAudioPlayer();
                 connection.subscribe(player);
+                let i = setInterval(() => {
+                    let gf = session.get(message.guildId as string);
+                    if (gf && gf.skip) {
+                        player.stop();
+                        gf.skip = false;
+                        session.set(message.guildId as string, gf);
+                    }
+                }, 100);
                 while (
                     guildConfig &&
                     guildConfig.generate.has(guildConfig.readingID)
@@ -270,11 +313,14 @@ async function messageListener(message: Message<boolean>) {
                         });
                     });
                 }
+                clearInterval(i);
             }
             if (guildConfig) {
                 guildConfig.read = false;
                 session.set(message.guildId as string, guildConfig);
             }
+        } else {
+            session.set(message.guildId as string, guildConfig);
         }
     }
 }
