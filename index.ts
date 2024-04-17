@@ -1,4 +1,3 @@
-import { speakers } from "./apis/voicevox";
 import {
     Client,
     IntentsBitField,
