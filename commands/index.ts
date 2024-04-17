@@ -131,6 +131,8 @@ async function listener(interaction: Interaction<CacheType>) {
                         generate: new Set<number>(),
                         read: false,
                         skip: false,
+                        joinVoiceChannelId: interaction.member.voice
+                            .channelId as string,
                     });
                     await joinVoiceChannel({
                         adapterCreator: interaction.guild.voiceAdapterCreator,
@@ -146,6 +148,21 @@ async function listener(interaction: Interaction<CacheType>) {
                                 ),
                         ],
                     });
+                    speechContent(
+                        "接続しました",
+                        interaction.member.voice.channelId,
+                        {
+                            channels: [interaction.channelId as string],
+                            id: 0,
+                            readingID: 0,
+                            generate: new Set<number>(),
+                            read: false,
+                            skip: false,
+                            joinVoiceChannelId: interaction.member.voice
+                                .channelId as string,
+                        },
+                        interaction.guildId
+                    );
                 }
                 break;
             case "exit":
@@ -166,6 +183,7 @@ async function listener(interaction: Interaction<CacheType>) {
                                 ],
                             });
                         }
+                        session.delete(interaction.guildId);
                     } else {
                         interaction.reply({
                             embeds: [
@@ -234,95 +252,104 @@ async function messageListener(message: Message<boolean>) {
                 return value;
             })
             .join("");
-        guildConfig.id += 1;
-        fs.mkdirSync(path.join(__dirname, "../audio/"), { recursive: true });
-        fs.writeFileSync(
-            path.join(
-                __dirname,
-                "../audio/" + message.guildId + "." + id + ".wav"
-            ),
-            await speech(msg, voice)
-        );
-        guildConfig.generate.add(id as number);
-        if (!guildConfig.read) {
-            guildConfig.read = true;
-            session.set(message.guildId as string, guildConfig);
-            const connection = getVoiceConnection(message.guildId as string);
-            if (connection) {
-                let player = createAudioPlayer();
-                connection.subscribe(player);
-                let i = setInterval(() => {
-                    let gf = session.get(message.guildId as string);
-                    if (gf && gf.skip) {
-                        player.stop();
-                        gf.skip = false;
-                        session.set(message.guildId as string, gf);
-                    }
-                }, 100);
-                while (
-                    guildConfig &&
-                    guildConfig.generate.has(guildConfig.readingID)
-                ) {
-                    if (!guildConfig) continue;
-                    let res = createAudioResource(
-                        path.join(
-                            __dirname,
-                            "../audio/" +
-                                message.guildId +
-                                "." +
-                                guildConfig.readingID +
-                                ".wav"
-                        )
-                    );
-                    player.play(res);
-                    await new Promise((resolve, reject) => {
-                        player.on("stateChange", (old, newState) => {
-                            if (
-                                newState.status == "idle" &&
-                                old.status == "playing"
-                            ) {
-                                resolve("");
-                                let guildConfig2 = session.get(
-                                    message.guildId as string
-                                );
-                                if (guildConfig && guildConfig2) {
-                                    fs.unlinkSync(
-                                        path.join(
-                                            __dirname,
-                                            "../audio/" +
-                                                message.guildId +
-                                                "." +
-                                                guildConfig.readingID +
-                                                ".wav"
-                                        )
-                                    );
-                                    guildConfig.readingID += 1;
-                                    guildConfig2.readingID =
-                                        guildConfig.readingID;
-                                    guildConfig2.generate.delete(
-                                        guildConfig.readingID - 1
-                                    );
-                                    session.set(
-                                        message.guildId as string,
-                                        guildConfig2
-                                    );
-                                    guildConfig = guildConfig2;
-                                    player.removeAllListeners("stateChange");
-                                }
-                            }
-                        });
-                    });
-                }
-                clearInterval(i);
-            }
-            if (guildConfig) {
-                guildConfig.read = false;
-                session.set(message.guildId as string, guildConfig);
-            }
-        } else {
-            session.set(message.guildId as string, guildConfig);
-        }
+        speechContent(msg, voice, guildConfig, message.guildId as string);
     }
 }
 
-export { listener, messageListener };
+async function speechContent(
+    msg: string,
+    voice: string,
+    guildConfig: {
+        channels: string[];
+        id: number;
+        readingID: number;
+        generate: Set<number>;
+        read: boolean;
+        skip: boolean;
+        joinVoiceChannelId: string;
+    },
+    guildId: string
+) {
+    let id = guildConfig.id;
+    guildConfig.id += 1;
+    fs.mkdirSync(path.join(__dirname, "../audio/"), { recursive: true });
+    fs.writeFileSync(
+        path.join(__dirname, "../audio/" + guildId + "." + id + ".wav"),
+        await speech(msg, voice)
+    );
+    guildConfig.generate.add(id as number);
+    if (!guildConfig.read) {
+        guildConfig.read = true;
+        session.set(guildId as string, guildConfig);
+        const connection = getVoiceConnection(guildId as string);
+        if (connection) {
+            let player = createAudioPlayer();
+            connection.subscribe(player);
+            let i = setInterval(() => {
+                let gf = session.get(guildId as string);
+                if (gf && gf.skip) {
+                    player.stop();
+                    gf.skip = false;
+                    session.set(guildId as string, gf);
+                }
+            }, 100);
+            while (
+                guildConfig &&
+                guildConfig.generate.has(guildConfig.readingID)
+            ) {
+                if (!guildConfig) continue;
+                let res = createAudioResource(
+                    path.join(
+                        __dirname,
+                        "../audio/" +
+                            guildId +
+                            "." +
+                            guildConfig.readingID +
+                            ".wav"
+                    )
+                );
+                player.play(res);
+                await new Promise((resolve, reject) => {
+                    player.on("stateChange", (old, newState) => {
+                        if (
+                            newState.status == "idle" &&
+                            old.status == "playing"
+                        ) {
+                            resolve("");
+                            let guildConfig2 = session.get(guildId as string);
+                            if (guildConfig && guildConfig2) {
+                                fs.unlinkSync(
+                                    path.join(
+                                        __dirname,
+                                        "../audio/" +
+                                            guildId +
+                                            "." +
+                                            guildConfig.readingID +
+                                            ".wav"
+                                    )
+                                );
+                                guildConfig.readingID += 1;
+                                guildConfig2.readingID = guildConfig.readingID;
+                                guildConfig2.generate.delete(
+                                    guildConfig.readingID - 1
+                                );
+                                session.set(guildId as string, guildConfig2);
+                                guildConfig = guildConfig2;
+                                player.removeAllListeners("stateChange");
+                            }
+                        }
+                    });
+                });
+            }
+            clearInterval(i);
+        }
+        if (guildConfig) {
+            guildConfig.read = false;
+            session.set(guildId as string, guildConfig);
+        }
+    } else {
+        session.set(guildId as string, guildConfig);
+    }
+}
+
+export { listener, messageListener, speechContent };

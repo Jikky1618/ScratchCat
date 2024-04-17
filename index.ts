@@ -6,7 +6,7 @@ import {
     ChannelType,
     version,
 } from "discord.js";
-import { listener, messageListener } from "./commands/index";
+import { listener, messageListener, speechContent } from "./commands/index";
 import { joinVoiceChannel, getVoiceConnection } from "@discordjs/voice";
 const client = new Client({
     intents: [
@@ -18,6 +18,10 @@ const client = new Client({
     ],
 });
 import { config } from "dotenv";
+import { session } from "./db";
+import fs from "fs";
+import path from "path";
+import { speech } from "./apis/voicevox";
 config({
     path: "./config.env",
 });
@@ -114,6 +118,48 @@ client.on("ready", () => {
 
 client.on("interactionCreate", (interaction) => {
     listener(interaction);
+});
+
+client.on("voiceStateUpdate", async (oldState, newState) => {
+    if (oldState.member?.user.bot) return;
+    if (oldState.channel?.members.size == 1000) {
+        if (oldState.guild && oldState.guild.id) {
+            if (
+                session.has(oldState.guild.id) &&
+                session.get(oldState.guild.id)?.joinVoiceChannelId ==
+                    (oldState.channelId as string)
+            ) {
+                const connection = getVoiceConnection(oldState.guild.id);
+                if (connection) {
+                    connection.destroy();
+                }
+            }
+        }
+    } else if (oldState.channelId && !newState.channelId) {
+        let guildConfig = session.get(newState.guild.id as string);
+        if (!guildConfig) {
+            return;
+        }
+        let member = oldState.guild.members.cache.get(oldState.id);
+        speechContent(
+            (member?.nickname || member?.user.displayName) + "が退出しました。",
+            "3",
+            guildConfig,
+            oldState.guild.id
+        );
+    } else if (!oldState.channelId && newState.channelId) {
+        let guildConfig = session.get(newState.guild.id as string);
+        if (!guildConfig) {
+            return;
+        }
+        let member = newState.guild.members.cache.get(newState.id);
+        speechContent(
+            (member?.nickname || member?.user.displayName) + "が入室しました。",
+            "3",
+            guildConfig,
+            newState.guild.id
+        );
+    }
 });
 
 client.on("messageCreate", async (message) => {
