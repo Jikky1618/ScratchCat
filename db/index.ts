@@ -1,6 +1,5 @@
 import fs from "fs";
 import path from "path";
-
 let session = new Map<
     string,
     {
@@ -10,8 +9,10 @@ let session = new Map<
         generate: Set<number>;
         read: boolean;
         skip: boolean;
+        joinVoiceChannelId: string;
     }
 >();
+
 let staticsSettings: {
     [keys: string]: {
         users: {
