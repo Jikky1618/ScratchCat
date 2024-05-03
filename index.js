@@ -67,8 +67,24 @@ client.on("ready", () => {
         builder.setRequired(true);
         let choices = [];
         choices.push({
-            name: "Scratch読み上げ",
-            value: "scratch_0",
+            name: "Scratch読み上げ(アルト)",
+            value: "Scratch_0",
+        });
+        choices.push({
+            name: "Scratch読み上げ(テノール)",
+            value: "Scratch_1",
+        });
+        choices.push({
+            name: "Scratch読み上げ(ネズミ)",
+            value: "Scratch_2",
+        });
+        choices.push({
+            name: "Scratch読み上げ(巨人)",
+            value: "Scratch_3",
+        });
+        choices.push({
+            name: "Scratch読み上げ(子猫)",
+            value: "Scratch_4",
         });
         builder.setChoices(...choices);
         return builder;
@@ -120,7 +136,7 @@ client.on("voiceStateUpdate", (oldState, newState) => __awaiter(void 0, void 0, 
     var _a, _b, _c;
     if ((_a = oldState.member) === null || _a === void 0 ? void 0 : _a.user.bot)
         return;
-    if (((_b = oldState.channel) === null || _b === void 0 ? void 0 : _b.members.size) == 1000) {
+    if (((_b = oldState.channel) === null || _b === void 0 ? void 0 : _b.members.size) == 1) {
         if (oldState.guild && oldState.guild.id) {
             if (db_1.session.has(oldState.guild.id) &&
                 ((_c = db_1.session.get(oldState.guild.id)) === null || _c === void 0 ? void 0 : _c.joinVoiceChannelId) ==
@@ -134,7 +150,8 @@ client.on("voiceStateUpdate", (oldState, newState) => __awaiter(void 0, void 0, 
     }
     else if (oldState.channelId && !newState.channelId) {
         let guildConfig = db_1.session.get(newState.guild.id);
-        if (!guildConfig) {
+        if (!guildConfig ||
+            guildConfig.joinVoiceChannelId != oldState.channelId) {
             return;
         }
         let member = oldState.guild.members.cache.get(oldState.id);
@@ -142,7 +159,8 @@ client.on("voiceStateUpdate", (oldState, newState) => __awaiter(void 0, void 0, 
     }
     else if (!oldState.channelId && newState.channelId) {
         let guildConfig = db_1.session.get(newState.guild.id);
-        if (!guildConfig) {
+        if (!guildConfig ||
+            guildConfig.joinVoiceChannelId != newState.channelId) {
             return;
         }
         let member = newState.guild.members.cache.get(newState.id);
