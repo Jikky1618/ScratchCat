@@ -1,4 +1,3 @@
-import { speakers } from "./apis/voicevox";
 import {
     Client,
     IntentsBitField,
@@ -7,7 +6,7 @@ import {
     ChannelType,
     version,
 } from "discord.js";
-import { listener, messageListener } from "./commands/index";
+import { listener, messageListener, speechContent } from "./commands/index";
 import { joinVoiceChannel, getVoiceConnection } from "@discordjs/voice";
 const client = new Client({
     intents: [
@@ -19,6 +18,10 @@ const client = new Client({
     ],
 });
 import { config } from "dotenv";
+import { session } from "./db";
+import fs from "fs";
+import path from "path";
+import { speech } from "./apis/voicevox";
 config({
     path: "./config.env",
 });
@@ -63,8 +66,24 @@ client.on("ready", () => {
             builder.setRequired(true);
             let choices: { name: string; value: string }[] = [];
             choices.push({
-                name: "Scratch読み上げ",
-                value: "scratch_0",
+                name: "Scratch読み上げ(アルト)",
+                value: "Scratch_0",
+            });
+            choices.push({
+                name: "Scratch読み上げ(テノール)",
+                value: "Scratch_1",
+            });
+            choices.push({
+                name: "Scratch読み上げ(ネズミ)",
+                value: "Scratch_2",
+            });
+            choices.push({
+                name: "Scratch読み上げ(巨人)",
+                value: "Scratch_3",
+            });
+            choices.push({
+                name: "Scratch読み上げ(子猫)",
+                value: "Scratch_4",
             });
             builder.setChoices(...choices);
             return builder;
@@ -115,6 +134,54 @@ client.on("ready", () => {
 
 client.on("interactionCreate", (interaction) => {
     listener(interaction);
+});
+
+client.on("voiceStateUpdate", async (oldState, newState) => {
+    if (oldState.member?.user.bot) return;
+    if (oldState.channel?.members.size == 1) {
+        if (oldState.guild && oldState.guild.id) {
+            if (
+                session.has(oldState.guild.id) &&
+                session.get(oldState.guild.id)?.joinVoiceChannelId ==
+                    (oldState.channelId as string)
+            ) {
+                const connection = getVoiceConnection(oldState.guild.id);
+                if (connection) {
+                    connection.destroy();
+                }
+            }
+        }
+    } else if (oldState.channelId && !newState.channelId) {
+        let guildConfig = session.get(newState.guild.id as string);
+        if (
+            !guildConfig ||
+            guildConfig.joinVoiceChannelId != oldState.channelId
+        ) {
+            return;
+        }
+        let member = oldState.guild.members.cache.get(oldState.id);
+        speechContent(
+            (member?.nickname || member?.user.displayName) + "が退出しました。",
+            "3",
+            guildConfig,
+            oldState.guild.id
+        );
+    } else if (!oldState.channelId && newState.channelId) {
+        let guildConfig = session.get(newState.guild.id as string);
+        if (
+            !guildConfig ||
+            guildConfig.joinVoiceChannelId != newState.channelId
+        ) {
+            return;
+        }
+        let member = newState.guild.members.cache.get(newState.id);
+        speechContent(
+            (member?.nickname || member?.user.displayName) + "が入室しました。",
+            "3",
+            guildConfig,
+            newState.guild.id
+        );
+    }
 });
 
 client.on("messageCreate", async (message) => {

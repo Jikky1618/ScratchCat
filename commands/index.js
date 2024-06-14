@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.messageListener = exports.listener = void 0;
+exports.speechContent = exports.messageListener = exports.listener = void 0;
 const discord_js_1 = require("discord.js");
 const voicevox_1 = require("../apis/voicevox");
 const os_utils_1 = __importDefault(require("os-utils"));
@@ -110,6 +110,9 @@ function listener(interaction) {
                             readingID: 0,
                             generate: new Set(),
                             read: false,
+                            skip: false,
+                            joinVoiceChannelId: interaction.member.voice
+                                .channelId,
                         });
                         yield (0, voice_1.joinVoiceChannel)({
                             adapterCreator: interaction.guild.voiceAdapterCreator,
@@ -123,6 +126,16 @@ function listener(interaction) {
                                     .setDescription("/creditで合成音声のクレジットを確認できます"),
                             ],
                         });
+                        speechContent("接続しました", interaction.member.voice.channelId, {
+                            channels: [interaction.channelId],
+                            id: 0,
+                            readingID: 0,
+                            generate: new Set(),
+                            read: false,
+                            skip: false,
+                            joinVoiceChannelId: interaction.member.voice
+                                .channelId,
+                        }, interaction.guildId);
                     }
                     break;
                 case "exit":
@@ -139,6 +152,7 @@ function listener(interaction) {
                                     ],
                                 });
                             }
+                            index_1.session.delete(interaction.guildId);
                         }
                         else {
                             interaction.reply({
@@ -173,58 +187,103 @@ function messageListener(message) {
             if (config) {
                 voice = config.voice;
             }
-            guildConfig.id += 1;
-            fs_1.default.mkdirSync(path_1.default.join(__dirname, "../audio/"), { recursive: true });
-            fs_1.default.writeFileSync(path_1.default.join(__dirname, "../audio/" + message.guildId + "." + id + ".wav"), yield (0, voicevox_1.speech)(message.content, voice));
-            guildConfig.generate.add(id);
-            if (!guildConfig.read) {
-                guildConfig.read = true;
-                index_1.session.set(message.guildId, guildConfig);
-                const connection = (0, voice_1.getVoiceConnection)(message.guildId);
-                if (connection) {
-                    let player = (0, voice_1.createAudioPlayer)();
-                    connection.subscribe(player);
-                    while (guildConfig &&
-                        guildConfig.generate.has(guildConfig.readingID)) {
-                        if (!guildConfig)
-                            continue;
-                        let res = (0, voice_1.createAudioResource)(path_1.default.join(__dirname, "../audio/" +
-                            message.guildId +
-                            "." +
-                            guildConfig.readingID +
-                            ".wav"));
-                        player.play(res);
-                        yield new Promise((resolve, reject) => {
-                            player.on("stateChange", (old, newState) => {
-                                if (newState.status == "idle" &&
-                                    old.status == "playing") {
-                                    resolve("");
-                                    let guildConfig2 = index_1.session.get(message.guildId);
-                                    if (guildConfig && guildConfig2) {
-                                        fs_1.default.unlinkSync(path_1.default.join(__dirname, "../audio/" +
-                                            message.guildId +
-                                            "." +
-                                            guildConfig.readingID +
-                                            ".wav"));
-                                        guildConfig.readingID += 1;
-                                        guildConfig2.readingID =
-                                            guildConfig.readingID;
-                                        guildConfig2.generate.delete(guildConfig.readingID - 1);
-                                        index_1.session.set(message.guildId, guildConfig2);
-                                        guildConfig = guildConfig2;
-                                        player.removeAllListeners("stateChange");
-                                    }
-                                }
-                            });
-                        });
-                    }
-                }
-                if (guildConfig) {
-                    guildConfig.read = false;
-                    index_1.session.set(message.guildId, guildConfig);
-                }
+            if (message.content == "s" || message.content == "$") {
+                guildConfig.skip = true;
+                return;
             }
+            let msg = message.content
+                .replace(/:.+:.*/g, "")
+                .replace(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, "リンク省略")
+                .split(/(<@[0-9]+>)/)
+                .map((value, index) => {
+                var _a, _b;
+                if (index % 2 == 1) {
+                    return ("@" +
+                        ((_b = (_a = message.guild) === null || _a === void 0 ? void 0 : _a.members.cache.get(value.slice(2, -1))) === null || _b === void 0 ? void 0 : _b.nickname));
+                }
+                return value;
+            })
+                .join("")
+                .split(/(<@&[0-9]+>)/)
+                .map((value, index) => {
+                var _a, _b;
+                if (index % 2 == 1) {
+                    return ("@" +
+                        ((_b = (_a = message.guild) === null || _a === void 0 ? void 0 : _a.roles.cache.get(value.slice(3, -1))) === null || _b === void 0 ? void 0 : _b.name));
+                }
+                return value;
+            })
+                .join("");
+            speechContent(msg, voice, guildConfig, message.guildId);
         }
     });
 }
 exports.messageListener = messageListener;
+function speechContent(msg, voice, guildConfig, guildId) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let id = guildConfig.id;
+        guildConfig.id += 1;
+        fs_1.default.mkdirSync(path_1.default.join(__dirname, "../audio/"), { recursive: true });
+        fs_1.default.writeFileSync(path_1.default.join(__dirname, "../audio/" + guildId + "." + id + ".wav"), yield (0, voicevox_1.speech)(msg, voice));
+        guildConfig.generate.add(id);
+        if (!guildConfig.read) {
+            guildConfig.read = true;
+            index_1.session.set(guildId, guildConfig);
+            const connection = (0, voice_1.getVoiceConnection)(guildId);
+            if (connection) {
+                let player = (0, voice_1.createAudioPlayer)();
+                connection.subscribe(player);
+                let i = setInterval(() => {
+                    let gf = index_1.session.get(guildId);
+                    if (gf && gf.skip) {
+                        player.stop();
+                        gf.skip = false;
+                        index_1.session.set(guildId, gf);
+                    }
+                }, 100);
+                while (guildConfig &&
+                    guildConfig.generate.has(guildConfig.readingID)) {
+                    if (!guildConfig)
+                        continue;
+                    let res = (0, voice_1.createAudioResource)(path_1.default.join(__dirname, "../audio/" +
+                        guildId +
+                        "." +
+                        guildConfig.readingID +
+                        ".wav"));
+                    player.play(res);
+                    yield new Promise((resolve, reject) => {
+                        player.on("stateChange", (old, newState) => {
+                            if (newState.status == "idle" &&
+                                old.status == "playing") {
+                                resolve("");
+                                let guildConfig2 = index_1.session.get(guildId);
+                                if (guildConfig && guildConfig2) {
+                                    fs_1.default.unlinkSync(path_1.default.join(__dirname, "../audio/" +
+                                        guildId +
+                                        "." +
+                                        guildConfig.readingID +
+                                        ".wav"));
+                                    guildConfig.readingID += 1;
+                                    guildConfig2.readingID = guildConfig.readingID;
+                                    guildConfig2.generate.delete(guildConfig.readingID - 1);
+                                    index_1.session.set(guildId, guildConfig2);
+                                    guildConfig = guildConfig2;
+                                    player.removeAllListeners("stateChange");
+                                }
+                            }
+                        });
+                    });
+                }
+                clearInterval(i);
+            }
+            if (guildConfig) {
+                guildConfig.read = false;
+                index_1.session.set(guildId, guildConfig);
+            }
+        }
+        else {
+            index_1.session.set(guildId, guildConfig);
+        }
+    });
+}
+exports.speechContent = speechContent;
