@@ -155,7 +155,7 @@ client.on("voiceStateUpdate", (oldState, newState) => __awaiter(void 0, void 0, 
             return;
         }
         let member = oldState.guild.members.cache.get(oldState.id);
-        (0, index_1.speechContent)(((member === null || member === void 0 ? void 0 : member.nickname) || (member === null || member === void 0 ? void 0 : member.user.displayName)) + "が退出しました。", "3", guildConfig, oldState.guild.id);
+        (0, index_1.speechContent)(((member === null || member === void 0 ? void 0 : member.nickname) || (member === null || member === void 0 ? void 0 : member.user.displayName)) + "が退出しました。", "Scratch_0", guildConfig, oldState.guild.id);
     }
     else if (!oldState.channelId && newState.channelId) {
         let guildConfig = db_1.session.get(newState.guild.id);
@@ -164,7 +164,7 @@ client.on("voiceStateUpdate", (oldState, newState) => __awaiter(void 0, void 0, 
             return;
         }
         let member = newState.guild.members.cache.get(newState.id);
-        (0, index_1.speechContent)(((member === null || member === void 0 ? void 0 : member.nickname) || (member === null || member === void 0 ? void 0 : member.user.displayName)) + "が入室しました。", "3", guildConfig, newState.guild.id);
+        (0, index_1.speechContent)(((member === null || member === void 0 ? void 0 : member.nickname) || (member === null || member === void 0 ? void 0 : member.user.displayName)) + "が入室しました。", "Scratch_0", guildConfig, newState.guild.id);
     }
 }));
 client.on("messageCreate", (message) => __awaiter(void 0, void 0, void 0, function* () {
