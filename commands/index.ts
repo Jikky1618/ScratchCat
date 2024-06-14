@@ -215,7 +215,7 @@ async function messageListener(message: Message<boolean>) {
         if (guildConfig) {
             id = guildConfig.id;
         }
-        let voice = "3";
+        let voice = "Scratch_0";
         if (config) {
             voice = config.voice;
         }
