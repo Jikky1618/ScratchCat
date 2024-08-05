@@ -162,7 +162,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
         let member = oldState.guild.members.cache.get(oldState.id);
         speechContent(
             (member?.nickname || member?.user.displayName) + "が退出しました。",
-            "3",
+            "Scratch_0",
             guildConfig,
             oldState.guild.id
         );
@@ -177,7 +177,7 @@ client.on("voiceStateUpdate", async (oldState, newState) => {
         let member = newState.guild.members.cache.get(newState.id);
         speechContent(
             (member?.nickname || member?.user.displayName) + "が入室しました。",
-            "3",
+            "Scratch_0",
             guildConfig,
             newState.guild.id
         );
